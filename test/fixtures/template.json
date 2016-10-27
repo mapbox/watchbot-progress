@@ -1,0 +1,645 @@
+{
+  "WatchbotProgressTable": {
+    "Type": "AWS::DynamoDB::Table",
+    "Properties": {
+      "TableName": {
+        "Fn::Join": [
+          "-",
+          [
+            {
+              "Ref": "AWS::StackName"
+            },
+            "Watchbot-progress"
+          ]
+        ]
+      },
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "id",
+          "KeyType": "HASH"
+        }
+      ],
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 30,
+        "WriteCapacityUnits": 30
+      }
+    }
+  },
+  "WatchbotProgressTablePermission": {
+    "Type": "AWS::IAM::Policy",
+    "Properties": {
+      "Roles": [
+        {
+          "Ref": "WatchbotWorkerRole"
+        }
+      ],
+      "PolicyName": "watchbot-progress",
+      "PolicyDocument": {
+        "Statement": [
+          {
+            "Action": [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem"
+            ],
+            "Effect": "Allow",
+            "Resource": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:aws:dynamodb:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":table/",
+                  {
+                    "Ref": "WatchbotProgressTable"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "WatchbotNotificationTopic": {
+    "Type": "AWS::SNS::Topic",
+    "Description": "Subscribe to this topic to receive emails when tasks fail or retry",
+    "Properties": {
+      "Subscription": [
+        {
+          "Endpoint": "my-email@place.com",
+          "Protocol": "email"
+        }
+      ]
+    }
+  },
+  "WatchbotLogGroup": {
+    "Type": "AWS::Logs::LogGroup",
+    "Properties": {
+      "LogGroupName": {
+        "Fn::Join": [
+          "-",
+          [
+            {
+              "Ref": "AWS::StackName"
+            },
+            {
+              "Ref": "AWS::Region"
+            },
+            "v1.0.0"
+          ]
+        ]
+      },
+      "RetentionInDays": 14
+    }
+  },
+  "WatchbotQueue": {
+    "Type": "AWS::SQS::Queue",
+    "Description": "Watchbot's backlog of messages to process",
+    "Properties": {
+      "VisibilityTimeout": 600,
+      "QueueName": {
+        "Fn::Join": [
+          "",
+          [
+            {
+              "Ref": "AWS::StackName"
+            },
+            "-",
+            "WatchbotQueue"
+          ]
+        ]
+      },
+      "MessageRetentionPeriod": 1209600
+    }
+  },
+  "WatchbotTopic": {
+    "Type": "AWS::SNS::Topic",
+    "Description": "Send messages to this topic to trigger tasks",
+    "Properties": {
+      "Subscription": [
+        {
+          "Endpoint": {
+            "Fn::GetAtt": [
+              "WatchbotQueue",
+              "Arn"
+            ]
+          },
+          "Protocol": "sqs"
+        }
+      ]
+    }
+  },
+  "WatchbotQueuePolicy": {
+    "Type": "AWS::SQS::QueuePolicy",
+    "Description": "A policy allowing the work topic to enqueue messages",
+    "Properties": {
+      "Queues": [
+        {
+          "Ref": "WatchbotQueue"
+        }
+      ],
+      "PolicyDocument": {
+        "Version": "2008-10-17",
+        "Id": "WatchbotWatchbotQueue",
+        "Statement": [
+          {
+            "Sid": "SendSomeMessages",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "*"
+            },
+            "Action": [
+              "sqs:SendMessage"
+            ],
+            "Resource": {
+              "Fn::GetAtt": [
+                "WatchbotQueue",
+                "Arn"
+              ]
+            },
+            "Condition": {
+              "ArnEquals": {
+                "aws:SourceArn": {
+                  "Ref": "WatchbotTopic"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "WatchbotQueueSizeAlarm": {
+    "Type": "AWS::CloudWatch::Alarm",
+    "Description": "An alarm that is tripped when too many messages are in Watchbot's queue",
+    "Properties": {
+      "AlarmDescription": {
+        "Fn::Join": [
+          "",
+          [
+            "Alarm if more than",
+            "40",
+            "messages in the queue for ",
+            "24",
+            "consecutive 5 minute periods"
+          ]
+        ]
+      },
+      "MetricName": "ApproximateNumberOfMessagesVisible",
+      "Namespace": "AWS/SQS",
+      "Statistic": "Average",
+      "Period": "300",
+      "EvaluationPeriods": 24,
+      "Threshold": 40,
+      "AlarmActions": [
+        {
+          "Ref": "WatchbotNotificationTopic"
+        }
+      ],
+      "Dimensions": [
+        {
+          "Name": "QueueName",
+          "Value": {
+            "Fn::GetAtt": [
+              "WatchbotQueue",
+              "QueueName"
+            ]
+          }
+        }
+      ],
+      "ComparisonOperator": "GreaterThanThreshold"
+    }
+  },
+  "WatchbotWorkerRole": {
+    "Type": "AWS::IAM::Role",
+    "Description": "The IAM role for the my-service worker",
+    "Properties": {
+      "AssumeRolePolicyDocument": {
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ecs-tasks.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }
+        ]
+      },
+      "Policies": [
+        {
+          "PolicyName": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "-default-worker"
+              ]
+            ]
+          },
+          "PolicyDocument": {
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "sns:Publish"
+                ],
+                "Resource": [
+                  {
+                    "Ref": "WatchbotNotificationTopic"
+                  },
+                  {
+                    "Ref": "WatchbotTopic"
+                  }
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "logs:FilterLogEvents"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "kms:Decrypt"
+                ],
+                "Resource": [
+                  {
+                    "Fn::ImportValue": "cloudformation-kms-production"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "WatchbotWatcherRole": {
+    "Type": "AWS::IAM::Role",
+    "Description": "The IAM role for the my-service watcher",
+    "Properties": {
+      "AssumeRolePolicyDocument": {
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ecs-tasks.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }
+        ]
+      },
+      "Policies": [
+        {
+          "PolicyName": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "-watcher"
+              ]
+            ]
+          },
+          "PolicyDocument": {
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "sqs:ReceiveMessage",
+                  "sqs:DeleteMessage",
+                  "sqs:ChangeMessageVisibility"
+                ],
+                "Resource": {
+                  "Fn::GetAtt": [
+                    "WatchbotQueue",
+                    "Arn"
+                  ]
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "sns:Publish"
+                ],
+                "Resource": {
+                  "Ref": "WatchbotNotificationTopic"
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecs:RunTask"
+                ],
+                "Resource": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ecs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":task-definition/",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "*"
+                    ]
+                  ]
+                },
+                "Condition": {
+                  "StringEquals": {
+                    "ecs:cluster": "my-cluster"
+                  }
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecs:DescribeTasks",
+                  "ecs:DescribeContainerInstances"
+                ],
+                "Resource": "*",
+                "Condition": {
+                  "StringEquals": {
+                    "ecs:cluster": "my-cluster"
+                  }
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecs:ListContainerInstances"
+                ],
+                "Resource": "my-cluster"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecs:DescribeTaskDefinition"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "logs:FilterLogEvents"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "WatchbotWorker": {
+    "Type": "AWS::ECS::TaskDefinition",
+    "DependsOn": "WatchbotWorkerRole",
+    "Description": "The task definition responsible for processing messages",
+    "Properties": {
+      "TaskRoleArn": {
+        "Ref": "WatchbotWorkerRole"
+      },
+      "ContainerDefinitions": [
+        {
+          "Name": "Watchbot-worker-my-service",
+          "Image": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ".dkr.ecr.",
+                {
+                  "Fn::FindInMap": [
+                    "EcrRegion",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "Region"
+                  ]
+                },
+                ".amazonaws.com/",
+                "my-service",
+                ":",
+                "v1.0.0"
+              ]
+            ]
+          },
+          "Memory": 64,
+          "Environment": [
+            {
+              "Name": "WorkTopic",
+              "Value": {
+                "Ref": "WatchbotTopic"
+              }
+            },
+            {
+              "Name": "LogGroup",
+              "Value": {
+                "Ref": "WatchbotLogGroup"
+              }
+            },
+            {
+              "Name": "ProgressTable",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:dynamodb:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":table/",
+                    {
+                      "Ref": "WatchbotProgressTable"
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          "LogConfiguration": {
+            "LogDriver": "awslogs",
+            "Options": {
+              "awslogs-group": {
+                "Ref": "WatchbotLogGroup"
+              },
+              "awslogs-region": {
+                "Ref": "AWS::Region"
+              },
+              "awslogs-stream-prefix": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "WatchbotWatcher": {
+    "Type": "AWS::ECS::TaskDefinition",
+    "Description": "The task definition responsible for watching the queue and running tasks",
+    "Properties": {
+      "TaskRoleArn": {
+        "Ref": "WatchbotWatcherRole"
+      },
+      "ContainerDefinitions": [
+        {
+          "Name": "Watchbot-watcher-my-service",
+          "Image": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ".dkr.ecr.",
+                {
+                  "Fn::FindInMap": [
+                    "EcrRegion",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "Region"
+                  ]
+                },
+                ".amazonaws.com/ecs-watchbot:",
+                "v1.0.2"
+              ]
+            ]
+          },
+          "Memory": 128,
+          "Environment": [
+            {
+              "Name": "Cluster",
+              "Value": "my-cluster"
+            },
+            {
+              "Name": "TaskDefinition",
+              "Value": {
+                "Ref": "WatchbotWorker"
+              }
+            },
+            {
+              "Name": "ContainerName",
+              "Value": "Watchbot-worker-my-service"
+            },
+            {
+              "Name": "Concurrency",
+              "Value": "1"
+            },
+            {
+              "Name": "QueueUrl",
+              "Value": {
+                "Ref": "WatchbotQueue"
+              }
+            },
+            {
+              "Name": "NotificationTopic",
+              "Value": {
+                "Ref": "WatchbotNotificationTopic"
+              }
+            },
+            {
+              "Name": "StackName",
+              "Value": {
+                "Ref": "AWS::StackName"
+              }
+            },
+            {
+              "Name": "ExponentialBackoff",
+              "Value": "true"
+            },
+            {
+              "Name": "NotifyAfterRetries",
+              "Value": 0
+            },
+            {
+              "Name": "LogGroupArn",
+              "Value": {
+                "Fn::GetAtt": [
+                  "WatchbotLogGroup",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Name": "LogLevel",
+              "Value": "info"
+            }
+          ],
+          "LogConfiguration": {
+            "LogDriver": "awslogs",
+            "Options": {
+              "awslogs-group": {
+                "Ref": "WatchbotLogGroup"
+              },
+              "awslogs-region": {
+                "Ref": "AWS::Region"
+              },
+              "awslogs-stream-prefix": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "WatchbotService": {
+    "Type": "AWS::ECS::Service",
+    "Description": "Maintains the desired number of watcher containers",
+    "DependsOn": [
+      "WatchbotWorker",
+      "WatchbotWatcher"
+    ],
+    "Properties": {
+      "Cluster": "my-cluster",
+      "DesiredCount": 1,
+      "TaskDefinition": {
+        "Ref": "WatchbotWatcher"
+      }
+    }
+  }
+}

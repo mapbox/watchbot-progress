@@ -1,0 +1,44 @@
+{
+  "name": "watchbot-progress",
+  "version": "0.0.1",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mapbox/watchbot-progress.git"
+  },
+  "author": "Mapbox",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mapbox/watchbot-progress/issues"
+  },
+  "homepage": "https://github.com/mapbox/watchbot-progress",
+  "engines": {
+    "node": "4.4.2"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "lib/progress.js",
+    "test": "nyc tape test/*.test.js",
+    "coverage": "nyc --reporter html tape test/*.test.js && opener coverage/index.html",
+    "pretest": "eslint bin lib test",
+    "docs": "documentation build --format html --output docs --config docs/config.json && opener docs/index.html"
+  },
+  "bin": {
+    "watchbot-progress": "./bin/watchbot-progress.js"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.4.11",
+    "d3-queue": "^2.0.3",
+    "dyno": "^1.2.0",
+    "meow": "^3.7.0"
+  },
+  "devDependencies": {
+    "documentation": "^4.0.0-beta2",
+    "dynamodb-test": "^0.2.2",
+    "eslint": "^2.6.0",
+    "nyc": "^6.4.0",
+    "opener": "^1.4.1",
+    "sinon": "^1.17.5",
+    "tape": "^4.5.1"
+  }
+}
