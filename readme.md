@@ -2,13 +2,17 @@
 
 # watchbot-progress
 
-`watchbot-progress` is a CLI command that is available to use on a reduce-enabled stack. This is one mechanism by which you can report progress to Watchbot as part of the above messaging flow. See the included `examples.md` for some basic worker recipes.
+`watchbot-progress` a series of tracking tools available on reduce-enabled Watchbot stacks to track the progress of distributed map-reduce operations. See the included `examples.md` for some basic worker recipes.
 
-Install watchbot-progress globally as part of your worker's Dockerfile to gain access to the CLI command on your workers at runtime:
+### Installation
 
 ```
-RUN npm install -g watchbot-progress
+npm install watchbot-progress
 ```
+
+### Using the CLI command
+
+A CLI command is available to report progress to Watchbot. This command is accessible on Watchbot stacks.
 
 ```
 $ watchbot-progress --help
@@ -34,14 +38,27 @@ $ watchbot-progress --help
     -r, --reason    (for fail-job) a description of why the job failed
 ```
 
-Note that by default, workers in reduce-enabled Watchbot stacks will have the `$ProgressTable` environment variable set automatically.
+### Creating a progress table
+
+A JavaScript module is available to create a DynamoDB table.
+
+```js
+var table = require('watchbot-progress').table;
+```
+
+This function requires 2 parameters:
+
+- **name**: DynamoDB table name
+- **throughout**: Object that contains user specification for progress table read and write capacity units:
+  - **throughput.readCapacityUnits**: Approximate number of reads per second from progress table
+  - **throughput.writeCapacityUnits**: Approximate number of writes per second to progress table
 
 ### Reporting progress in JavaScript
 
 A JavaScript module is also available as a mechanism for progress reporting.
 
 ```js
-var progress = require('watchbot-progress');
+var progress = require('watchbot-progress').progress;
 ```
 
 - **progress.setTotal(jobId, total, [callback])**: Set the total number of parts for a particular map-reduce operation.

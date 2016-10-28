@@ -1,6 +1,6 @@
 # watchbot-reduce examples
 
-Simple examples of how you may wish to use watchbot's progress tracking tools.
+Simple examples of how you may wish to use watchbot-progress tracking tools.
 
 ## Bash
 
@@ -63,7 +63,7 @@ function reduce() {
 #!/usr/bin/env node
 
 var AWS = require('aws-sdk');
-var progress = require('watchbot-progress');
+var progress = require('watchbot-progress').progress;
 
 // In this example, the `./worker.js` module contains the actual logic for
 // processing jobs. This example script just covers the interactions with
