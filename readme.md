@@ -12,7 +12,7 @@ npm install watchbot-progress
 
 ### Using the CLI command
 
-A CLI command is available to report progress to Watchbot. This command is accessible on Watchbot stacks.
+A CLI command is available to report progress to Watchbot, and is accessible by default on Watchbot stacks.
 
 ```
 $ watchbot-progress --help
@@ -38,9 +38,12 @@ $ watchbot-progress --help
     -r, --reason    (for fail-job) a description of why the job failed
 ```
 
+Note that by default, workers in reduce-enabled Watchbot stacks will have the `$ProgressTable`
+environment variable set automatically.
+
 ### Creating a progress table
 
-A JavaScript module is available to create a DynamoDB table.
+A JavaScript module is available to create a DynamoDB table. You will need to provide any CloudFormation permissions.
 
 ```js
 var table = require('watchbot-progress').table;
