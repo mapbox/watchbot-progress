@@ -1,4 +1,4 @@
-<!-- [![Build Status](https://travis-ci.org/mapbox/watchbot-progress.svg?branch=master)](https://travis-ci.org/mapbox/watchbot-progress) -->
+[![Build Status](https://travis-ci.com/mapbox/watchbot-progress.svg?token=Z8JyQH8sBSdZv3SwHK2w&branch=master)](https://travis-ci.org/mapbox/watchbot-progress)
 
 # watchbot-progress
 
