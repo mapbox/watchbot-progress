@@ -12,7 +12,7 @@ npm install watchbot-progress
 
 ### Using the CLI command
 
-A CLI command is available to report progress to Watchbot, and is accessible by default on Watchbot stacks.
+A CLI command is available to report progress to Watchbot, and is accessible by default on reduce-enabled Watchbot stacks.
 
 ```
 $ watchbot-progress --help
