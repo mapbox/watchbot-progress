@@ -1,0 +1,34 @@
+{
+  "WatchbotProgressTable": {
+    "Type": "AWS::DynamoDB::Table",
+    "Properties": {
+      "TableName": {
+        "Fn::Join": [
+          "-",
+          [
+            {
+              "Ref": "AWS::StackName"
+            },
+            "Watchbot-progress"
+          ]
+        ]
+      },
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "id",
+          "AttributeType": "S"
+        }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "id",
+          "KeyType": "HASH"
+        }
+      ],
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 30,
+        "WriteCapacityUnits": 30
+      }
+    }
+  }
+}
