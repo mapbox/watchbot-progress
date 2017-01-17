@@ -17,10 +17,11 @@ var help = `
     - set-metadata: set arbitrary metadata on the job record
     - complete-part: complete a single part
     - fail-job: mark a job as a failure
+    - reduce-sent: mark a job as having its reduce step taken
 
   OPTIONS:
     -t, --total     (for set-total) the total number of parts in a job
-    -p, --part      (for complete-part) the part number to mark as complete
+    -p, --part      (for complete-part or status) the part number to mark as complete or check for completeness
     -m, --metadata  (for set-metadata) the JSON metadata object to store
     -r, --reason    (for fail-job) a description of why the job failed
 `;
@@ -51,7 +52,7 @@ var progress;
 try { progress = client(); }
 catch (err) { cli.showHelp(); }
 
-if (command === 'status') return progress.status(jobId, complete);
+if (command === 'status') return progress.status(jobId, cli.flags.part, complete);
 if (command === 'set-total') return progress.setTotal(jobId, cli.flags.total, complete);
 if (command === 'set-metadata') {
   var metadata;
@@ -67,6 +68,7 @@ if (command === 'set-metadata') {
 }
 if (command === 'complete-part') return progress.completePart(jobId, cli.flags.part, complete);
 if (command === 'fail-job') return progress.failJob(jobId, cli.flags.reason, complete);
+if (command === 'reduce-sent') return progress.reduceSent(jobId, complete);
 return cli.showHelp();
 
 function complete(err, data) {
