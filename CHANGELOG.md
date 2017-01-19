@@ -1,3 +1,7 @@
+### 1.1.1
+
+- fix a bug in `.status()` that failed part checks on finished jobs
+
 ### 1.1.0
 
 - switch to namespaced package `@mapbox/watchbot-progress`
