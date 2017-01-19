@@ -44,13 +44,21 @@ var jobId = cli.input[1];
 
 if (!jobId) {
   console.error('No job id provided');
-  cli.showHelp();
-  process.exit(1);
+  cli.showHelp(1);
 }
 
 var progress;
 try { progress = client(); }
-catch (err) { cli.showHelp(); }
+catch (err) { cli.showHelp(1); }
+
+function complete(err, data) {
+  if (err) {
+    console.error(err);
+    cli.showHelp(1);
+  }
+
+  if (data !== undefined) console.log(JSON.stringify(data));
+}
 
 if (command === 'status') return progress.status(jobId, cli.flags.part, complete);
 if (command === 'set-total') return progress.setTotal(jobId, cli.flags.total, complete);
@@ -60,8 +68,7 @@ if (command === 'set-metadata') {
   try { metadata = JSON.parse(cli.flags.metadata); }
   catch (err) {
     console.error('Could not parse provided metadata');
-    cli.showHelp();
-    process.exit(1);
+    cli.showHelp(1);
   }
 
   return progress.setMetadata(jobId, metadata, complete);
@@ -69,14 +76,5 @@ if (command === 'set-metadata') {
 if (command === 'complete-part') return progress.completePart(jobId, cli.flags.part, complete);
 if (command === 'fail-job') return progress.failJob(jobId, cli.flags.reason, complete);
 if (command === 'reduce-sent') return progress.reduceSent(jobId, complete);
-return cli.showHelp();
 
-function complete(err, data) {
-  if (err) {
-    console.error(err);
-    cli.showHelp();
-    process.exit(1);
-  }
-
-  if (data !== undefined) console.log(JSON.stringify(data));
-}
+cli.showHelp(1);
