@@ -1,3 +1,7 @@
+### 1.1.2
+
+- fix a bug where the CLI tool would exit 0 even if the process failed
+
 ### 1.1.1
 
 - fix a bug in `.status()` that failed part checks on finished jobs
