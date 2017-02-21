@@ -51,12 +51,13 @@ dynamodb.test('[progress] completePart (incomplete)', function(assert) {
   var jobId = 'my-job';
   client.setTotal('uhhhh', 10, function(err) {
     assert.ifError(err, 'setTotal success');
-    client.completePart('hey', 4, function(err, completed) {
-      console.log(err);
-      console.log(completed);
+    client.completePart('doesntexist', 4, function(err, completed) {
+      console.log('err after completePart: ' + err);
+      console.log('complete boolean after completePart: ' + completed);
       assert.ifError(err, 'completePart success');
       assert.notOk(completed, 'upload is not complete');
       dynamodb.dyno.getItem({ Key: { id: 'nope' } }, function(err, data) {
+        console.log('data returned from getItem: ' + JSON.stringify(data));
         assert.ifError(err, 'got record');
         assert.deepEqual(data.Item, {
           id: jobId,
