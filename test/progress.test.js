@@ -51,7 +51,7 @@ dynamodb.test('[progress] completePart (incomplete)', function(assert) {
   var jobId = 'my-job';
   client.setTotal('uhhhh', 10, function(err) {
     assert.ifError(err, 'setTotal success');
-    client.completePart('nope', 4, function(err, completed) {
+    client.completePart('hey', 4, function(err, completed) {
       console.log(err);
       console.log(completed);
       assert.ifError(err, 'completePart success');
