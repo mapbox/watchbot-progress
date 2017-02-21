@@ -49,12 +49,14 @@ dynamodb.test('[progress] setTotal (no callback)', function(assert) {
 dynamodb.test('[progress] completePart (incomplete)', function(assert) {
   var client = progress(`arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`);
   var jobId = 'my-job';
-  client.setTotal(jobId, 10, function(err) {
+  client.setTotal('uhhhh', 10, function(err) {
     assert.ifError(err, 'setTotal success');
-    client.completePart(jobId, 4, function(err, completed) {
+    client.completePart('nope', 4, function(err, completed) {
+      console.log(err);
+      console.log(completed);
       assert.ifError(err, 'completePart success');
       assert.notOk(completed, 'upload is not complete');
-      dynamodb.dyno.getItem({ Key: { id: jobId } }, function(err, data) {
+      dynamodb.dyno.getItem({ Key: { id: 'nope' } }, function(err, data) {
         assert.ifError(err, 'got record');
         assert.deepEqual(data.Item, {
           id: jobId,
