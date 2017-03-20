@@ -67,7 +67,8 @@ if (command === 'set-metadata') {
 
   try { metadata = JSON.parse(cli.flags.metadata); }
   catch (err) {
-    console.error('Could not parse provided metadata');
+    console.error(err);
+    // console.error('Could not parse provided metadata');
     cli.showHelp(1);
   }
 
