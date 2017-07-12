@@ -1,3 +1,7 @@
+### 1.1.3
+
+- more permissive engines.node
+
 ### 1.1.2
 
 - fix a bug where the CLI tool would exit 0 even if the process failed
