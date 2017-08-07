@@ -377,6 +377,25 @@ dynamodb.test('[progress] status (with reduceSent)', function(assert) {
   });
 });
 
+dynamodb.test('[progress] status (no job yet)', function(assert) {
+  var client = progress(`arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`);
+  var jobId = 'my-job';
+  client.status(jobId, function(err, status) {
+    assert.ifError(err, 'status success');
+    assert.deepEqual(status, { progress: 0 }, 'reports no progress');
+    assert.end();
+  });
+});
+
+dynamodb.test('[progress] status (no job yet, no callback)', function(assert) {
+  var client = progress(`arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`);
+  var jobId = 'my-job';
+  client.status(jobId)
+    .then((status) => assert.deepEqual(status, { progress: 0 }, 'reports no progress'))
+    .catch((err) => assert.ifError(err, 'failed'))
+    .then(() => assert.end());
+});
+
 dynamodb.test('[progress] can read table from env', function(assert) {
   assert.throws(progress, /ProgressTable environment variable is not set/, 'without env an error is thrown');
   process.env.ProgressTable = `arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`;
