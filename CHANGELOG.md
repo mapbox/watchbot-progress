@@ -1,3 +1,7 @@
+### 1.1.4
+
+- fix a bug in `.status()` when using promises
+
 ### 1.1.3
 
 - more permissive engines.node
