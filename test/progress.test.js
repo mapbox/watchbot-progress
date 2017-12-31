@@ -361,6 +361,24 @@ dynamodb.test('[progress] status (finished job, check part)', function(assert) {
   });
 });
 
+dynamodb.test('[progress] status (nearly complete job, check part)', function(assert) {
+  var client = progress(`arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`);
+  var jobId = 'my-job';
+  client.setTotal(jobId, 1e3, function(err) {
+    assert.ifError(err, 'setTotal success');
+    var q = queue(10);
+    for (var i = 1; i <= 999; i++) q.defer(client.completePart.bind(client), jobId, i);
+    q.awaitAll(function(err) {
+      assert.ifError(err, 'completePart x999');
+      client.status(jobId, 1000, function(err, status) {
+        assert.ifError(err, 'status success');
+        assert.deepEqual(status, { progress: 0.99, partComplete: false }, 'progress < 1, partComplete: false');
+        assert.end();
+      });
+    });
+  });
+});
+
 dynamodb.test('[progress] status (with reduceSent)', function(assert) {
   var client = progress(`arn:aws:dynamodb:local:1234567890:table/${dynamodb.tableName}`);
   var jobId = 'my-job';
