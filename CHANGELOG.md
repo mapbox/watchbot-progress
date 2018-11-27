@@ -1,3 +1,7 @@
+### 1.1.6
+
+- upgrade @mapbox/dyno and @mapbox/dynamodb-test
+
 ### 1.1.4
 
 - fix a bug in `.status()` when using promises
