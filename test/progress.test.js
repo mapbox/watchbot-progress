@@ -1,11 +1,11 @@
-var Dyno = require('dyno');
+var Dyno = require('@mapbox/dyno');
 var progress = require('../lib/progress');
 var queue = require('d3-queue').queue;
 var sinon = require('sinon');
 var tape = require('tape');
 
 var resources = JSON.parse(require('fs').readFileSync(__dirname + '/fixtures/template.json').toString());
-var dynamodb = require('dynamodb-test')(tape, 'watchbot-progress', resources.WatchbotProgressTable.Properties);
+var dynamodb = require('@mapbox/dynamodb-test')(tape, 'watchbot-progress', resources.WatchbotProgressTable.Properties);
 
 process.env.DynamoDbEndpoint = 'http://localhost:4567';
 process.env.AWS_ACCESS_KEY_ID='-';
