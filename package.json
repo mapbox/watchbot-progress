@@ -27,6 +27,7 @@
     "watchbot-progress": "./bin/watchbot-progress.js"
   },
   "dependencies": {
+    "@mapbox/dyno": "^1.4.2",
     "aws-sdk": "^2.4.11",
     "d3-queue": "^2.0.3",
     "dyno": "^1.2.0",
