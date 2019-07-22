@@ -35,7 +35,7 @@
   "devDependencies": {
     "documentation": "^4.0.0-beta2",
     "@mapbox/dynamodb-test": "0.3.0",
-    "eslint": "^2.6.0",
+    "eslint": "^4.18.2",
     "nyc": "^6.4.0",
     "opener": "^1.4.1",
     "sinon": "^1.17.5",
