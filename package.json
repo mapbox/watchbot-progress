@@ -29,7 +29,7 @@
   "dependencies": {
     "aws-sdk": "^2.4.11",
     "d3-queue": "^2.0.3",
-    "@mapbox/dyno": "1.4.2",
+    "@mapbox/dyno": "^1.4.2",
     "meow": "^3.7.0"
   },
   "devDependencies": {
