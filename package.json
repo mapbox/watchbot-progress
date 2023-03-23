@@ -30,13 +30,13 @@
     "aws-sdk": "^2.4.11",
     "d3-queue": "^2.0.3",
     "@mapbox/dyno": "^1.6.1",
-    "meow": "^3.7.0"
+    "meow": "11.0.0"
   },
   "devDependencies": {
-    "documentation": "^4.0.0-beta2",
-    "@mapbox/dynamodb-test": "0.3.0",
+    "documentation": "14.0.1",
+    "@mapbox/dynamodb-test": "0.6.0",
     "eslint": "^4.18.2",
-    "nyc": "^6.4.0",
+    "nyc": "^15.1.0",
     "opener": "^1.4.1",
     "sinon": "^1.17.5",
     "tape": "^4.5.1"
